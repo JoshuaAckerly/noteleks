@@ -22,6 +22,13 @@ class InputHandler {
         this._jumpBufferTime = 0;
         this._jumpBuffer = GameConfig.player.jumpBuffer ?? 120;
 
+        // Spear charge state
+        this.isCharging = false;
+        this.chargeStartTime = 0;
+        this.maxChargeTime = 1000; // ms to reach full charge
+        this._chargeGraphic = null;
+        this._prevSpaceDown = false;
+
         this.setupKeys();
     }
 
@@ -169,19 +176,55 @@ class InputHandler {
             player.playAnimation('jump', false);
         }
 
-        // Handle attack — throw spear
-        if (inputState.attack) {
+        // ── Spear charge mechanic ────────────────────────────────────────────
+        // Spacebar DOWN → begin charging
+        // Spacebar HELD → animate charge indicator above player
+        // Spacebar UP   → release throw with charge multiplier
+        const spaceDown = this.keys?.SPACE?.isDown ?? false;
+        const spaceJustDown = spaceDown && !this._prevSpaceDown;
+        const spaceJustUp   = !spaceDown && this._prevSpaceDown;
+        this._prevSpaceDown = spaceDown;
+
+        // Start charging
+        if (spaceJustDown && this.canAttack()) {
+            this.isCharging = true;
+            this.chargeStartTime = Date.now();
+            if (!this._chargeGraphic) {
+                this._chargeGraphic = this.scene.add.graphics();
+                this._chargeGraphic.setDepth(100);
+            }
+        }
+
+        // Update charge bar
+        if (this.isCharging && this._chargeGraphic) {
+            const chargePercent = Math.min((Date.now() - this.chargeStartTime) / this.maxChargeTime, 1);
+            const barW = 40;
+            const barH = 6;
+            const barX = player.sprite.x - barW / 2;
+            const barY = player.sprite.y - 85;
+            this._chargeGraphic.clear();
+            this._chargeGraphic.fillStyle(0x333333, 0.8);
+            this._chargeGraphic.fillRect(barX, barY, barW, barH);
+            const fillColor = chargePercent < 0.5 ? 0x9b6dff : 0xffd700;
+            this._chargeGraphic.fillStyle(fillColor, 1);
+            this._chargeGraphic.fillRect(barX, barY, barW * chargePercent, barH);
+        }
+
+        // Release throw
+        if (spaceJustUp && this.isCharging) {
+            const chargePercent = Math.min((Date.now() - this.chargeStartTime) / this.maxChargeTime, 1);
+            const chargeMultiplier = 1 + chargePercent; // 1.0× – 2.0×
+            this.isCharging = false;
+            this._destroyChargeGraphic();
             this.registerAttack();
             player.playAnimation('attack', false);
-            // Throw a spear via WeaponManager
             const weaponManager = this.scene.weaponManager;
             if (weaponManager) {
                 const direction = player.sprite.flipX ? 'left' : 'right';
-                // Spawn from roughly the player's hand position
                 const spawnX = player.sprite.x + (direction === 'right' ? 20 : -20);
                 const spawnY = player.sprite.y - 40;
                 weaponManager.setWeaponType('spear');
-                weaponManager.createWeapon(spawnX, spawnY, direction);
+                weaponManager.createWeapon(spawnX, spawnY, direction, null, chargeMultiplier);
             }
         }
     }
@@ -223,9 +266,17 @@ class InputHandler {
      * Clean up resources
      */
     destroy() {
+        this._destroyChargeGraphic();
         this.keys = null;
         this.scene = null;
         this.physicsManager = null;
+    }
+
+    _destroyChargeGraphic() {
+        if (this._chargeGraphic) {
+            this._chargeGraphic.destroy();
+            this._chargeGraphic = null;
+        }
     }
 }
 

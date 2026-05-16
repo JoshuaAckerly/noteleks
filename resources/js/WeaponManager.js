@@ -8,7 +8,7 @@ class WeaponManager {
         this.scene = scene;
         this.weapons = null;
         this.weaponTypes = {
-            spear:     { speed: 520, damage: 2, sprite: 'spear'     },
+            spear:     { speed: 520, damage: 2, sprite: 'noteleks-frames', frame: 'spear' },
             dagger:    { speed: 300, damage: 1, sprite: 'dagger'    },
             fireball:  { speed: 250, damage: 2, sprite: 'fireball'  },
             arrow:     { speed: 400, damage: 1, sprite: 'arrow'     },
@@ -31,23 +31,25 @@ class WeaponManager {
         this.scene.physics.add.overlap(this.weapons, enemiesGroup, this.hitEnemy, null, this);
     }
 
-    createWeapon(x, y, direction = 'right', pointer = null) {
+    createWeapon(x, y, direction = 'right', pointer = null, chargeMultiplier = 1) {
         const weaponConfig = this.weaponTypes[this.currentWeaponType];
-        const weapon = this.weapons.create(x, y, weaponConfig.sprite);
+        const speed = weaponConfig.speed * chargeMultiplier;
+
+        const weapon = this.weapons.create(x, y, weaponConfig.sprite, weaponConfig.frame ?? null);
 
         // Store weapon properties
         weapon.weaponType = this.currentWeaponType;
-        weapon.damage = weaponConfig.damage;
+        weapon.damage = Math.ceil(weaponConfig.damage * chargeMultiplier);
         weapon.startTime = this.scene.time.now;
 
         if (pointer) {
             // Throw toward mouse/touch position
             const angle = Phaser.Math.Angle.Between(x, y, pointer.x, pointer.y);
-            this.scene.physics.velocityFromAngle((angle * 180) / Math.PI, weaponConfig.speed, weapon.body.velocity);
+            this.scene.physics.velocityFromAngle((angle * 180) / Math.PI, speed, weapon.body.velocity);
             weapon.setRotation(angle);
         } else {
             // Throw in facing direction with a very slight arc
-            const velocityX = direction === 'right' ? weaponConfig.speed : -weaponConfig.speed;
+            const velocityX = direction === 'right' ? speed : -speed;
             weapon.setVelocityX(velocityX);
             weapon.setVelocityY(-60);
             // Rotate the spear to face direction of travel

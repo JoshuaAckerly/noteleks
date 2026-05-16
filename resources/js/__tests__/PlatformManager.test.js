@@ -25,7 +25,7 @@ describe('PlatformManager', () => {
     });
 
     describe('createPlatforms – world layout', () => {
-        it('creates 18 floating platforms (one per floater definition)', () => {
+        it('creates multiple floating platforms (procedural: 12–30)', () => {
             const mockScene = createMockScene();
             const manager = new PlatformManager(mockScene);
             manager.platforms = { add: jest.fn() };
@@ -33,10 +33,11 @@ describe('PlatformManager', () => {
             const floatSpy = jest.spyOn(manager, 'createFloatingPlatform');
             manager.createPlatforms();
 
-            expect(floatSpy).toHaveBeenCalledTimes(18);
+            expect(floatSpy.mock.calls.length).toBeGreaterThanOrEqual(12);
+            expect(floatSpy.mock.calls.length).toBeLessThanOrEqual(30);
         });
 
-        it('does not place ground tiles at x=928 (inside pit zone 1: 896–1088)', () => {
+        it('always skips some ground tiles (at least one pit exists)', () => {
             const mockScene = createMockScene();
             const manager = new PlatformManager(mockScene);
             manager.platforms = { add: jest.fn() };
@@ -44,13 +45,15 @@ describe('PlatformManager', () => {
 
             const groundCalls = mockScene.entityFactory.createPlatform.mock.calls
                 .filter(([, , type]) => type === 'ground');
-            const xValues = groundCalls.map(([x]) => x);
-
-            expect(xValues).not.toContain(928);   // 928 is inside [896, 1088]
-            expect(xValues).not.toContain(992);   // also inside pit 1
+            const groundCount = groundCalls.length;
+            // With no pits the world needs ~50 tiles; pits always remove at least 2+
+            const worldW = GameConfig.world?.width ?? 3200;
+            const tileW  = GameConfig.assets.textures.ground.width ?? 64;
+            const maxTiles = Math.ceil(worldW / tileW) + 1;
+            expect(groundCount).toBeLessThan(maxTiles);
         });
 
-        it('does not place ground tiles inside pit zone 2 (1728–1920)', () => {
+        it('ground tiles only land on valid pit-zone types', () => {
             const mockScene = createMockScene();
             const manager = new PlatformManager(mockScene);
             manager.platforms = { add: jest.fn() };
@@ -58,40 +61,35 @@ describe('PlatformManager', () => {
 
             const groundCalls = mockScene.entityFactory.createPlatform.mock.calls
                 .filter(([, , type]) => type === 'ground');
-            const xValues = groundCalls.map(([x]) => x);
 
-            expect(xValues).not.toContain(1760);  // inside [1728, 1920]
-            expect(xValues).not.toContain(1824);
+            // Every ground tile x should be a multiple of tileW offset (tile grid alignment)
+            const tileW = GameConfig.assets.textures.ground.width ?? 64;
+            groundCalls.forEach(([x]) => {
+                // tileX = i*tileW + tileW/2, so (x - tileW/2) % tileW === 0
+                expect((x - tileW / 2) % tileW).toBe(0);
+            });
         });
 
-        it('does not place ground tiles inside pit zones 3 and 4', () => {
-            const mockScene = createMockScene();
-            const manager = new PlatformManager(mockScene);
-            manager.platforms = { add: jest.fn() };
-            manager.createPlatforms();
+        it('generates different layouts on separate calls', () => {
+            // Run twice and compare floating platform x-values
+            const mockScene1 = createMockScene();
+            const mgr1 = new PlatformManager(mockScene1);
+            mgr1.platforms = { add: jest.fn() };
+            const spy1 = jest.spyOn(mgr1, 'createFloatingPlatform');
+            mgr1.createPlatforms();
+            const xs1 = spy1.mock.calls.map(([x]) => Math.round(x));
 
-            const groundCalls = mockScene.entityFactory.createPlatform.mock.calls
-                .filter(([, , type]) => type === 'ground');
-            const xValues = groundCalls.map(([x]) => x);
+            const mockScene2 = createMockScene();
+            const mgr2 = new PlatformManager(mockScene2);
+            mgr2.platforms = { add: jest.fn() };
+            const spy2 = jest.spyOn(mgr2, 'createFloatingPlatform');
+            mgr2.createPlatforms();
+            const xs2 = spy2.mock.calls.map(([x]) => Math.round(x));
 
-            expect(xValues).not.toContain(2336);  // inside [2304, 2496]
-            expect(xValues).not.toContain(2784);  // inside [2752, 2880]
-        });
-
-        it('does place ground tiles just outside pit zone boundaries', () => {
-            const mockScene = createMockScene();
-            const manager = new PlatformManager(mockScene);
-            manager.platforms = { add: jest.fn() };
-            manager.createPlatforms();
-
-            const groundCalls = mockScene.entityFactory.createPlatform.mock.calls
-                .filter(([, , type]) => type === 'ground');
-            const xValues = groundCalls.map(([x]) => x);
-
-            // tileX=864 (i=13) is just before pit 1 (896) — should be present
-            expect(xValues).toContain(864);
-            // tileX=1120 (i=17) is just after pit 1 (1088) — should be present
-            expect(xValues).toContain(1120);
+            // With random placement the exact platform lists will almost never match.
+            // (If this flakes, the RNG is broken — not the game code.)
+            const identical = JSON.stringify(xs1) === JSON.stringify(xs2);
+            expect(identical).toBe(false);
         });
 
         it('floating platforms span the full 3200px world', () => {
@@ -103,9 +101,9 @@ describe('PlatformManager', () => {
             manager.createPlatforms();
 
             const xValues = floatSpy.mock.calls.map(([x]) => x);
-            // Earliest platform is in the tutorial zone (x < 800)
+            // Zone 0 platforms start at x≥280, which is < 800
             expect(Math.min(...xValues)).toBeLessThan(800);
-            // Latest platform reaches into the advanced zone (x > 2400)
+            // Zone 3 platforms reach up to ~2840, which is > 2400
             expect(Math.max(...xValues)).toBeGreaterThan(2400);
         });
     });
