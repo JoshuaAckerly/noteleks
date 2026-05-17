@@ -1,0 +1,16 @@
+{
+    "frames": {
+        "spear": {
+            "frame": { "x": 272, "y": 113, "w": 578, "h": 90 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 578, "h": 90 },
+            "sourceSize": { "w": 578, "h": 90 }
+        }
+    },
+    "meta": {
+        "image": "Noteleks.png",
+        "size": { "w": 872, "h": 205 },
+        "scale": "1"
+    }
+}

@@ -9,9 +9,7 @@
 export const ALIAS_MAP = {
     'skeleton-idle': 'player-idle',
     'skeleton-run': 'player-run',
-    'skeleton-walk': 'player-walk',
     'skeleton-jump': 'player-jump',
-    'skeleton-jumpattack': 'player-jump-attack',
     'skeleton-attack1': 'player-attack',
     'skeleton-attack2': 'player-attack',
 };

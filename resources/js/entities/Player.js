@@ -72,7 +72,7 @@ class Player extends GameObject {
             this._spineAnimationListener = {
                 complete: (entry) => {
                     const name = entry?.animation?.name;
-                    if (name === 'Attack1' || name === 'Attack2') {
+                    if (name === 'throw') {
                         this.handleAttackAnimationComplete();
                     }
                 },

@@ -28,16 +28,8 @@ describe('AnimationHelper', () => {
             expect(ALIAS_MAP['skeleton-jump']).toBe('player-jump');
         });
 
-        it('maps skeleton-jumpattack to player-jump-attack', () => {
-            expect(ALIAS_MAP['skeleton-jumpattack']).toBe('player-jump-attack');
-        });
-
         it('maps skeleton-attack1 to player-attack', () => {
             expect(ALIAS_MAP['skeleton-attack1']).toBe('player-attack');
-        });
-
-        it('keeps jump and jump-attack aliases separate', () => {
-            expect(ALIAS_MAP['skeleton-jump']).not.toBe(ALIAS_MAP['skeleton-jumpattack']);
         });
     });
 

@@ -145,7 +145,7 @@ export const GameConfig = {
             dataKey: 'noteleks-skeleton-data',
             atlasKey: 'noteleks-atlas',
             skel: '/spine/Skeleton/Skeleton.skel',
-            atlas: '/spine/Skeleton/Skeleton.atlas',
+            atlas: '/spine/Skeleton/Noteleks.atlas',
         },
         sprites: {
             manifest: null,

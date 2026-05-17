@@ -106,13 +106,13 @@ describe('AssetManager', () => {
         it('defaults to 12fps repeat -1 when no animConfig provided', () => {
             const manifest = {
                 frameSequences: {
-                    '/sprites/Skeleton-Walk_': ['Skeleton-Walk_00.webp', 'Skeleton-Walk_01.webp'],
+                    '/sprites/Skeleton-Run_': ['Skeleton-Run_00.webp', 'Skeleton-Run_01.webp'],
                 },
             };
             AssetManager.queueAssetsFromManifest(mockScene, manifest);
 
             const createCalls = mockScene.anims.create.mock.calls;
-            const animCall = createCalls.find((c) => c[0].key === 'skeleton-walk');
+            const animCall = createCalls.find((c) => c[0].key === 'skeleton-run');
             expect(animCall[0].frameRate).toBe(12);
             expect(animCall[0].repeat).toBe(-1);
         });
@@ -162,19 +162,6 @@ describe('AssetManager', () => {
             expect(jumpCall).toBeDefined();
         });
 
-        it('maps skeleton-jumpattack to player-jump-attack', () => {
-            const manifest = {
-                frameSequences: {
-                    '/sprites/Skeleton-JumpAttack_': ['Skeleton-JumpAttack_0.webp', 'Skeleton-JumpAttack_1.webp'],
-                },
-            };
-            AssetManager.queueAssetsFromManifest(mockScene, manifest);
-
-            const createCalls = mockScene.anims.create.mock.calls;
-            const jumpAttackCall = createCalls.find((c) => c[0].key === 'player-jump-attack');
-            expect(jumpAttackCall).toBeDefined();
-        });
-
         it('maps skeleton-attack1 to player-attack', () => {
             const manifest = {
                 frameSequences: {
@@ -203,20 +190,6 @@ describe('AssetManager', () => {
             expect(aliasCall[0].repeat).toBe(0);
         });
 
-        it('jump-attack alias inherits animConfig from source animation', () => {
-            const manifest = {
-                frameSequences: {
-                    '/sprites/Skeleton-JumpAttack_': ['Skeleton-JumpAttack_0.webp', 'Skeleton-JumpAttack_1.webp'],
-                },
-            };
-            const animConfig = { 'skeleton-jumpattack': { frameRate: 15, repeat: 0 } };
-            AssetManager.queueAssetsFromManifest(mockScene, manifest, animConfig);
-
-            const createCalls = mockScene.anims.create.mock.calls;
-            const aliasCall = createCalls.find((c) => c[0].key === 'player-jump-attack');
-            expect(aliasCall[0].frameRate).toBe(15);
-            expect(aliasCall[0].repeat).toBe(0);
-        });
     });
 
     describe('full manifest integration', () => {
@@ -230,7 +203,6 @@ describe('AssetManager', () => {
                     ),
                     '/games/noteleks/sprites/Skeleton-Run_': Array.from({ length: 16 }, (_, i) => `Skeleton-Run_${String(i).padStart(2, '0')}.webp`),
                     '/games/noteleks/sprites/Skeleton-Attack1_': ['Skeleton-Attack1_0.webp', 'Skeleton-Attack1_1.webp', 'Skeleton-Attack1_2.webp'],
-                    '/games/noteleks/sprites/Skeleton-JumpAttack_': Array.from({ length: 8 }, (_, i) => `Skeleton-JumpAttack_${i}.webp`),
                     '/games/noteleks/sprites/Skeleton-Jump_': ['Skeleton-Jump_0.webp'],
                 },
             };
@@ -239,27 +211,24 @@ describe('AssetManager', () => {
                 'skeleton-run': { frameRate: 12, repeat: -1 },
                 'skeleton-jump': { frameRate: 1, repeat: 0 },
                 'skeleton-attack1': { frameRate: 10, repeat: 0 },
-                'skeleton-jumpattack': { frameRate: 15, repeat: 0 },
             };
 
             AssetManager.queueAssetsFromManifest(mockScene, manifest, animConfig);
 
-            // Verify total image loads: 16 + 16 + 3 + 8 + 1 = 44
-            expect(mockScene.load.image).toHaveBeenCalledTimes(44);
+            // Verify total image loads: 16 + 16 + 3 + 1 = 36
+            expect(mockScene.load.image).toHaveBeenCalledTimes(36);
 
             const createdKeys = mockScene.anims.create.mock.calls.map((c) => c[0].key);
             // Source animations
             expect(createdKeys).toContain('skeleton-idle');
             expect(createdKeys).toContain('skeleton-run');
             expect(createdKeys).toContain('skeleton-attack1');
-            expect(createdKeys).toContain('skeleton-jumpattack');
             expect(createdKeys).toContain('skeleton-jump');
             // Alias animations
             expect(createdKeys).toContain('player-idle');
             expect(createdKeys).toContain('player-run');
             expect(createdKeys).toContain('player-attack');
             expect(createdKeys).toContain('player-jump');
-            expect(createdKeys).toContain('player-jump-attack');
 
             // Verify idle has correct config
             const idle = mockScene.anims.create.mock.calls.find((c) => c[0].key === 'skeleton-idle');

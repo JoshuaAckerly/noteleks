@@ -6,11 +6,9 @@ import { AssetManager } from '../utils/AssetManagerSimple.js';
 const ANIM_CONFIG = {
     'skeleton-idle': { frameRate: 8, repeat: -1 },
     'skeleton-run': { frameRate: 12, repeat: -1 },
-    'skeleton-walk': { frameRate: 12, repeat: -1 },
     'skeleton-jump': { frameRate: 1, repeat: 0 },
     'skeleton-attack1': { frameRate: 10, repeat: 0 },
     'skeleton-attack2': { frameRate: 10, repeat: 0 },
-    'skeleton-jumpattack': { frameRate: 15, repeat: 0 },
 };
 
 class LoadingScene extends Phaser.Scene {
@@ -56,6 +54,9 @@ class LoadingScene extends Phaser.Scene {
             this.load.spineBinary(GameConfig.assets.spine.dataKey, GameConfig.assets.spine.skel);
             this.load.spineAtlas(GameConfig.assets.spine.atlasKey, GameConfig.assets.spine.atlas);
         }
+
+        // Load the sprite atlas for non-Spine assets (e.g. thrown spear)
+        this.load.atlas('noteleks-frames', '/spine/Skeleton/Noteleks.png', '/spine/Skeleton/Noteleks.json');
     }
 
     create() {
@@ -72,9 +73,6 @@ class LoadingScene extends Phaser.Scene {
             if (this._progressText) this._progressText.setText('0%');
 
             AssetManager.queueAssetsFromManifest(this, manifest, ANIM_CONFIG);
-
-            // Static assets not covered by the manifest
-            this.load.image('spear', '/games/noteleks/sprites/Spear.png');
 
             this.load.on('progress', (p) => {
                 if (this._progressText) this._progressText.setText(Math.round(p * 100) + '%');

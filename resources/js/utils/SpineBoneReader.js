@@ -184,7 +184,7 @@ class SpineBoneReader {
         // Map game states to Spine animation names
         const animMap = {
             idle: 'Idle',
-            attack: 'Attack1',
+            attack: 'throw',
             run: 'Run',
             jump: 'Jump',
         };

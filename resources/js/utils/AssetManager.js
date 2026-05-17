@@ -105,8 +105,6 @@ export class AssetManager {
                         const aliasMap = {
                             'skeleton-idle': 'player-idle',
                             'skeleton-run': 'player-run',
-                            'skeleton-walk': 'player-walk',
-                            'skeleton-jumpattack': 'player-jump',
                             'skeleton-attack1': 'player-attack',
                             'skeleton-attack2': 'player-attack',
                         };

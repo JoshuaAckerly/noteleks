@@ -3,10 +3,8 @@ import GameConfig from '../config/GameConfig.js';
 const SPINE_ANIMATION_MAP = {
     'player-idle': 'Idle',
     'player-run': 'Run',
-    'player-walk': 'Walk',
     'player-jump': 'Jump',
-    'player-attack': 'Attack1',
-    'player-jump-attack': 'JumpAttack',
+    'player-attack': 'throw',
 };
 
 /**
