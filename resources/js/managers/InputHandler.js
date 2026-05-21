@@ -180,7 +180,9 @@ class InputHandler {
         // Spacebar DOWN → begin charging
         // Spacebar HELD → animate charge indicator above player
         // Spacebar UP   → release throw with charge multiplier
-        const spaceDown = this.keys?.SPACE?.isDown ?? false;
+        // Mobile attack button is treated as an alias for spacebar.
+        const touchAttack = this.scene.inputManager?.getTouchState?.()?.attack ?? false;
+        const spaceDown = (this.keys?.SPACE?.isDown ?? false) || touchAttack;
         const spaceJustDown = spaceDown && !this._prevSpaceDown;
         const spaceJustUp   = !spaceDown && this._prevSpaceDown;
         this._prevSpaceDown = spaceDown;
