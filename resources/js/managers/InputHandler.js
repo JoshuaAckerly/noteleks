@@ -2,6 +2,14 @@ import GameConfig from '../config/GameConfig.js';
 import PhysicsManager from './PhysicsManager.js';
 
 /**
+ * How many milliseconds into the throw animation the projectile is released.
+ * Tune this to match the frame where Noteleks' hand comes back down.
+ * The throw animation total duration is ~667ms (measured from Spine skeleton).
+ * The release point is roughly at 40% of that.
+ */
+const THROW_RELEASE_DELAY_MS = 266;
+
+/**
  * InputHandler - Manages keyboard input for the player
  * Extracted from Player class for better separation of concerns
  */
@@ -220,14 +228,18 @@ class InputHandler {
             this._destroyChargeGraphic();
             this.registerAttack();
             player.playAnimation('attack', false);
-            const weaponManager = this.scene.weaponManager;
-            if (weaponManager) {
+
+            // Delay the actual projectile spawn to the release frame of the
+            // throw animation (when Noteleks' hand comes back down).
+            this.scene.time.delayedCall(THROW_RELEASE_DELAY_MS, () => {
+                if (!this.scene?.weaponManager || !player?.sprite) return;
+                const weaponManager = this.scene.weaponManager;
                 const direction = player.sprite.flipX ? 'left' : 'right';
                 const spawnX = player.sprite.x + (direction === 'right' ? 20 : -20);
                 const spawnY = player.sprite.y - 40;
                 weaponManager.setWeaponType('spear');
                 weaponManager.createWeapon(spawnX, spawnY, direction, null, chargeMultiplier);
-            }
+            });
         }
     }
 

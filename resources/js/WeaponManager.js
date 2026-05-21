@@ -1,5 +1,7 @@
 /* global Phaser */
 
+import SpearSprite from './SpearSprite.js';
+
 /**
  * WeaponManager class handles all projectiles and weapons in the game
  */
@@ -63,6 +65,13 @@ class WeaponManager {
             weapon.setScale(0.15);
         }
 
+        // Attach a visual weapon sprite to the player while the spear is in flight
+        if (this.currentWeaponType === 'spear' && this.scene.player) {
+            weapon.spearSprite = new SpearSprite(this.scene, this.scene.player);
+            // Hide the physics sprite — SpearSprite is the sole visual for the projectile
+            weapon.setVisible(false);
+        }
+
         return weapon;
     }
 
@@ -78,8 +87,12 @@ class WeaponManager {
                 weapon.y > this.scene.cameras.main.worldView.bottom + 50 ||
                 age > 3000
             ) {
+                weapon.spearSprite?.destroy();
                 weapon.destroy();
+                return;
             }
+
+            weapon.spearSprite?.update(weapon);
         });
     }
 
@@ -93,7 +106,8 @@ class WeaponManager {
         // Deal damage to enemy
         const scoreEarned = enemy.takeDamage(weapon.damage);
 
-        // Destroy weapon
+        // Destroy weapon and its visual attachment
+        weapon.spearSprite?.destroy();
         weapon.destroy();
 
         // Add score if enemy was destroyed (takeDamage returns score when destroyed)
