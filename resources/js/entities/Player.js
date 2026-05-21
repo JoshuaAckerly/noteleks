@@ -110,6 +110,13 @@ class Player extends GameObject {
             );
             spineObject.setDepth(100);
             spineObject.setScale(GameConfig.player.scale, GameConfig.player.scale);
+
+            // Hide slots that float incorrectly during movement
+            ['hand_wall', 'cape'].forEach((slotName) => {
+                const slot = spineObject.skeleton?.findSlot(slotName);
+                if (slot) slot.color.a = 0;
+            });
+
             return spineObject;
         } catch (e) {
             console.warn('[Player] Failed to create Spine visual:', e.message);
