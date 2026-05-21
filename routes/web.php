@@ -18,12 +18,12 @@ Route::get('/spine/characters/{file}', function (string $file) {
     $extension = pathinfo($file, PATHINFO_EXTENSION);
     $mimeTypes = [
         'atlas' => 'text/plain',
-        'json'  => 'application/json',
-        'png'   => 'image/png',
+        'json' => 'application/json',
+        'png' => 'image/png',
     ];
 
     return response()->file($path, [
-        'Content-Type'  => $mimeTypes[$extension] ?? 'application/octet-stream',
+        'Content-Type' => $mimeTypes[$extension] ?? 'application/octet-stream',
         'Cache-Control' => 'public, max-age=3600',
     ]);
 })->where('file', '.*');
