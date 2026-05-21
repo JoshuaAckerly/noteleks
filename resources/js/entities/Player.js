@@ -367,6 +367,8 @@ class Player extends GameObject {
         // Reset animation states
         this._isJumping = false;
         this._isAttacking = false;
+        this._attackLocked = false;
+        this.isKnockedBack = false;
         this.playAnimation('idle', true);
     }
 

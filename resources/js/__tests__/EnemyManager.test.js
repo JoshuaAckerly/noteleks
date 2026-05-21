@@ -24,15 +24,25 @@ describe('EnemyManager', () => {
     });
 
     describe('calculateSpawnPosition', () => {
-        it('never spawns inside a pit zone', () => {
-            const manager = new EnemyManager(makeMockScene());
-            const pitZones = [[896, 1088], [1728, 1920], [2304, 2496], [2752, 2880]];
+        it('respects setSpawnBounds — never spawns outside the set range', () => {
+            const manager = new EnemyManager(makeMockScene(0, -9999)); // player far away
+            manager.setSpawnBounds(100, 400);
 
             for (let i = 0; i < 100; i++) {
                 const { x } = manager.calculateSpawnPosition();
-                const inPit = pitZones.some(([s, e]) => x > s && x < e);
-                expect(inPit).toBe(false);
+                expect(x).toBeGreaterThanOrEqual(100);
+                expect(x).toBeLessThanOrEqual(400);
             }
+        });
+
+        it('clears spawn bounds — spawns across full world when cleared', () => {
+            const manager = new EnemyManager(makeMockScene(0, -9999));
+            manager.setSpawnBounds(100, 200);
+            manager.clearSpawnBounds();
+
+            const xs = Array.from({ length: 50 }, () => manager.calculateSpawnPosition().x);
+            // With no bounds, the range is 64..3136; at least some should exceed 200
+            expect(xs.some(x => x > 200)).toBe(true);
         });
 
         it('never spawns within 250px of the player', () => {

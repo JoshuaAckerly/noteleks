@@ -19,13 +19,13 @@ class EntityFactory {
         return {
             player: {
                 sprite: 'skeleton-idle-0',
-                scale: GameConfig.player.scale,
+                scale: 1, // physics sprite is invisible; Spine visual is scaled via GameConfig.player.scale
                 depth: 100,
                 physics: {
                     collideWorldBounds: true,
                     bounce: 0,
-                    bodySize: { width: 60, height: 100 },
-                    bodyOffset: { x: 48, y: 120 },
+                    bodySize: { width: 40, height: 155 },
+                    bodyOffset: { x: 12, y: -59 },
                 },
             },
             enemies: {

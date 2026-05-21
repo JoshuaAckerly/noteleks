@@ -10,15 +10,98 @@ export class PlatformManager {
         this.platforms = null;
     }
 
+    /**
+     * Create the static platforms group. Does NOT build any tiles yet.
+     * Actual tile creation happens in createPlatforms(), which is called
+     * from GameScene.startNextRound() after RoomManager is initialised.
+     */
     initialize() {
         this.platforms = this.scene.physics.add.staticGroup();
-        this.createPlatforms();
+        // Platform geometry is built in createPlatforms(), called later.
     }
 
     createPlatforms() {
-        this._generateProcedural();
+        const rooms = this.scene.roomManager?.rooms;
+        if (rooms && rooms.length > 0) {
+            this._generateFromRooms(rooms);
+        } else {
+            this._generateProcedural();
+        }
     }
 
+    /**
+     * Room-based generation: one independent layout per room.
+     * Each room is ROOM_WIDTH (800 px) wide and contains:
+     *  - Solid ground with an optional pit (not in room 0)
+     *  - 2–4 floating platforms at three height tiers
+     *  - A bridge platform guaranteed above any pit
+     */
+    _generateFromRooms(rooms) {
+        const worldH = GameConfig.world?.height ?? 600;
+        const tileW  = GameConfig.assets.textures.ground.width;  // 64
+        const tileH  = GameConfig.assets.textures.ground.height; // 32
+        const groundY = worldH - tileH / 2;
+
+        rooms.forEach(room => this._buildRoom(room, groundY, tileW, tileH, worldH));
+    }
+
+    _buildRoom(room, groundY, tileW, tileH, worldH) {
+        const { x: roomX, width: roomW, index } = room;
+
+        // Optional pit (not in the first room; 60 % chance in subsequent rooms)
+        const hasPit = index > 0 && Math.random() > 0.4;
+        let pitStart = -1, pitEnd = -1;
+        if (hasPit) {
+            const maxOffset = roomW - 450;
+            pitStart = roomX + 200 + Math.floor(Math.random() * Math.max(1, maxOffset));
+            pitEnd   = pitStart + 128 + Math.floor(Math.random() * 96);
+        }
+
+        // Ground tiles
+        for (let tx = roomX; tx < roomX + roomW; tx += tileW) {
+            const cx = tx + tileW / 2;
+            if (hasPit && cx > pitStart && cx < pitEnd) continue;
+            const tile = this.scene.entityFactory.createPlatform(cx, groundY, 'ground');
+            this.platforms.add(tile);
+        }
+
+        // Floating platforms — raised so lowest tier bottom (tierY+16) clears the 151px character
+        const tierY = [worldH - 250, worldH - 340, worldH - 430];
+        const floatCount = 2 + Math.floor(Math.random() * 3); // 2–4
+        const placed = [];
+
+        for (let j = 0; j < floatCount; j++) {
+            const pw = [128, 192, 256][Math.floor(Math.random() * 3)];
+            let attempts = 0;
+            while (attempts < 12) {
+                const px = roomX + 80 + Math.random() * (roomW - 160);
+                const py = tierY[Math.floor(Math.random() * tierY.length)];
+                const overlaps = placed.some(
+                    p => Math.abs(p.x - px) < (pw / 2 + p.w / 2 + 40) && p.y === py
+                );
+                if (!overlaps) {
+                    placed.push({ x: px, y: py, w: pw });
+                    this.createFloatingPlatform(px, py, pw, tileH);
+                    break;
+                }
+                attempts++;
+            }
+        }
+
+        // Guarantee a bridge above any pit so the room is always crossable
+        if (hasPit) {
+            const bridgeX = (pitStart + pitEnd) / 2;
+            const bridgeY = tierY[1]; // mid tier
+            const overlaps = placed.some(
+                p => Math.abs(p.x - bridgeX) < (192 / 2 + p.w / 2 + 20) && p.y === bridgeY
+            );
+            if (!overlaps) {
+                this.createFloatingPlatform(bridgeX, bridgeY, 192, tileH);
+            }
+        }
+    }
+
+    // ── Legacy fallback (used when RoomManager is absent, e.g. in tests) ──────
     _generateProcedural() {
         const worldW = GameConfig.world?.width ?? 3200;
         const worldH = GameConfig.world?.height ?? 600;
@@ -56,14 +139,13 @@ export class PlatformManager {
         }
 
         // ── Floating platforms ────────────────────────────────────────────────
-        // Tier heights (y): low=450 mid=370 high=290
-        // Place at least one bridge platform over each pit, then scatter extras.
-        const tierY = [450, 370, 290];
+        // Tier heights (y): low=350 mid=260 high=170 — clearance above 151px character
+        const tierY = [350, 260, 170];
 
         // Bridge platforms: one per pit to ensure it's crossable
         for (const [pitStart, pitEnd] of pitZones) {
             const bridgeX = (pitStart + pitEnd) / 2;
-            this.createFloatingPlatform(bridgeX, 370, 192, tileH);
+            this.createFloatingPlatform(bridgeX, 260, 192, tileH);
         }
 
         // Scatter platforms across zones (avoid first/last 200 px)

@@ -12,6 +12,8 @@ export class EnemyManager {
         this.enemies = null;
         this.spawnTimer = null;
         this.spawnCount = 0;
+        /** @type {{ minX: number, maxX: number } | null} */
+        this.spawnBounds = null;
     }
 
     initialize() {
@@ -30,6 +32,19 @@ export class EnemyManager {
             this.spawnTimer = null;
         }
         // No-op otherwise
+    }
+
+    /**
+     * Restrict enemy spawning to a horizontal range (current room).
+     * @param {number} minX
+     * @param {number} maxX
+     */
+    setSpawnBounds(minX, maxX) {
+        this.spawnBounds = { minX, maxX };
+    }
+
+    clearSpawnBounds() {
+        this.spawnBounds = null;
     }
 
     spawnEnemy() {
@@ -54,37 +69,33 @@ export class EnemyManager {
     }
 
     calculateSpawnPosition() {
-        const cam      = this.scene.cameras.main;
-        const worldW   = GameConfig.world?.width ?? 3200;
+        const cam = this.scene.cameras.main;
         const { maxFromEdge } = this.config.spawnDistance;
 
-        // Pit zones mirrored from PlatformManager — never spawn inside a pit
-        const pitZones = [[896, 1088], [1728, 1920], [2304, 2496], [2752, 2880]];
-        const isInPit     = (x) => pitZones.some(([s, e]) => x > s && x < e);
-        const isOnScreen  = (x) => x > cam.scrollX - 50 && x < cam.scrollX + cam.width + 50;
-        const playerX     = this.scene.player?.sprite?.x ?? (cam.scrollX + cam.width / 2);
-        const isTooClose  = (x) => Math.abs(x - playerX) < 250;
+        // Use room-based bounds when set, otherwise fall back to full world
+        const worldW = GameConfig.world?.width ?? 3200;
+        const bounds = this.spawnBounds;
+        const boundsMinX = bounds?.minX ?? 64;
+        const boundsMaxX = bounds?.maxX ?? (worldW - 64);
 
-        // 60 % of spawns: pick a random position elsewhere in the world
-        // so enemies exist throughout the level, not only at camera edges.
-        if (Math.random() < 0.6) {
-            for (let i = 0; i < 15; i++) {
-                const x = 64 + Math.random() * (worldW - 128);
-                if (!isInPit(x) && !isOnScreen(x) && !isTooClose(x)) {
-                    const y = cam.height - maxFromEdge;
-                    return { x, y };
-                }
+        const isOnScreen = (x) => x > cam.scrollX - 50 && x < cam.scrollX + cam.width + 50;
+        const playerX    = this.scene.player?.sprite?.x ?? (cam.scrollX + cam.width / 2);
+        const isTooClose = (x) => Math.abs(x - playerX) < 250;
+
+        // Try to find an off-screen position within the spawn bounds
+        for (let i = 0; i < 20; i++) {
+            const x = boundsMinX + Math.random() * (boundsMaxX - boundsMinX);
+            if (!isOnScreen(x) && !isTooClose(x)) {
+                return { x, y: cam.height - maxFromEdge };
             }
         }
 
-        // 40 % (or fallback): spawn just off the current camera edge
-        const offscreen = 80;
+        // Fallback: spawn just off the visible edge, clamped to bounds
         const spawnLeft = Math.random() < 0.5;
         const x = spawnLeft
-            ? Math.max(32, cam.scrollX - offscreen)
-            : Math.min(worldW - 32, cam.scrollX + cam.width + offscreen);
-        const y = cam.height - maxFromEdge;
-        return { x, y };
+            ? Math.max(boundsMinX, cam.scrollX - 80)
+            : Math.min(boundsMaxX, cam.scrollX + cam.width + 80);
+        return { x, y: cam.height - maxFromEdge };
     }
 
     selectEnemyType() {
@@ -215,6 +226,7 @@ export class EnemyManager {
         this.stopSpawning();
         this.clearAllEnemies();
         this.spawnCount = 0;
+        this.spawnBounds = null;
         // Do NOT start automatic spawning. Spawning is controlled by GameScene.
     }
 

@@ -8,6 +8,7 @@ import EntityFactory from '../factories/EntityFactory.js';
 import GameUI from '../GameUI.js';
 import PhysicsManager from '../managers/PhysicsManager.js';
 import PlatformManager from '../managers/PlatformManager.js';
+import RoomManager from '../managers/RoomManager.js';
 import TouchInputManager from '../managers/TouchInputManager.js';
 import SystemManager from '../systems/SystemManager.js';
 import WeaponManager from '../WeaponManager.js';
@@ -27,6 +28,7 @@ class GameScene extends Phaser.Scene {
 
         this.platformManager = null;
         this.physicsManager = null;
+        this.roomManager = null;
         this.weaponManager = null;
         this.particleManager = null;
         this.gameUI = null;
@@ -45,8 +47,6 @@ class GameScene extends Phaser.Scene {
     }
 
     preload() {
-        this.showLoadingScreen();
-
         // Note: asset loading is handled by LoadingScene. GameScene.preload
         // keeps spine raw asset queuing in case GameScene is started directly
         // (defensive), but avoid re-queuing player sprites here.
@@ -212,6 +212,7 @@ class GameScene extends Phaser.Scene {
         this.enemyManager = new EnemyManager(this);
         this.physicsManager = new PhysicsManager(this);
         this.platformManager = new PlatformManager(this);
+        this.roomManager = new RoomManager(this);
 
         this.weaponManager = new WeaponManager(this);
         this.particleManager = new ParticleManager(this);
@@ -394,7 +395,7 @@ class GameScene extends Phaser.Scene {
 
         // Start the continuous green aura on the player
         if (this.particleManager && this.player?.sprite) {
-            this.particleManager.startPlayerAura(this.player.sprite);
+            this.particleManager.startPlayerAura(this.player.sprite, this.player.spineObject ?? null);
             // Sync aura to starting health (full = 1.0)
             this.particleManager.setAuraHealth(this.gameUI?.health ?? 100, this.gameUI?.maxHealth ?? 100);
         }
@@ -470,17 +471,37 @@ class GameScene extends Phaser.Scene {
         }
         this.roundActive = false;
         this.roundInTransition = true;
-        // Example: 3 + round*2 enemies per round
-        this.enemiesToSpawn = 3 + this.currentRound * 2;
-        this.enemiesSpawnedThisRound = 0;
-        if (this.enemyManager) {
-            this.enemyManager.clearAllEnemies();
+
+        // Number of rooms grows with the round (2 → 3 → 4 → 5, capped)
+        const numRooms = Math.min(2 + Math.floor((this.currentRound - 1) / 2), 5);
+
+        // Clear enemies and old platforms
+        if (this.enemyManager) this.enemyManager.clearAllEnemies();
+        if (this.platformManager) this.platformManager.clearAllPlatforms();
+
+        // Build new rooms (sets physics & camera bounds to room 0)
+        if (this.roomManager) this.roomManager.initialize(numRooms, this.currentRound);
+
+        // Rebuild platform geometry for all rooms
+        if (this.platformManager) this.platformManager.createPlatforms();
+
+        // Apply spawn bounds + enemy quota for room 0
+        const firstRoom = this.roomManager?.getCurrentRoom();
+        if (firstRoom) {
+            this.enemyManager?.setSpawnBounds(firstRoom.x + 80, firstRoom.x + firstRoom.width - 80);
+            this.enemiesToSpawn = firstRoom.enemyCount;
+            this.enemiesSpawnedThisRound = 0;
         }
-        // Optionally show round UI here
-        if (this.gameUI && this.gameUI.showRound) {
-            this.gameUI.showRound(this.currentRound);
-        }
-        // Delay before round starts
+
+        // Reset player to the start of room 0
+        const spawnX = (firstRoom?.x ?? 0) + 80;
+        const spawnY = (GameConfig.world?.height ?? 600) - 80;
+        try {
+            if (this.player?.reset) this.player.reset(spawnX, spawnY);
+        } catch { /* ignore */ }
+
+        if (this.gameUI?.showRound) this.gameUI.showRound(this.currentRound);
+
         this.time.delayedCall(1500, () => {
             this.roundActive = true;
             this.roundInTransition = false;
@@ -489,18 +510,41 @@ class GameScene extends Phaser.Scene {
 
     handleRoundLogic() {
         if (!this.roundActive || this.roundInTransition) return;
-        // Spawn enemies for this round
+
+        const room = this.roomManager?.getCurrentRoom();
+        if (!room) return;
+
+        // Spawn enemies for the current room
         if (this.enemiesSpawnedThisRound < this.enemiesToSpawn) {
-            // Only spawn if not exceeding maxEnemies
             if (this.enemyManager && this.enemyManager.getEnemyCount() < GameConfig.enemies.maxEnemies) {
                 this.enemyManager.spawnEnemy();
                 this.enemiesSpawnedThisRound++;
             }
         } else {
-            // All enemies spawned, check if all defeated
+            // All enemies spawned — wait for all to be defeated
             if (this.enemyManager && this.enemyManager.getEnemyCount() === 0) {
-                this.currentRound++;
-                this.startNextRound();
+                this.roomManager.markCurrentRoomCleared();
+
+                if (this.roomManager.hasNextRoom()) {
+                    // Transition to the next room
+                    this.roundActive = false;
+                    this.roomManager.transitionToNextRoom(() => {
+                        const nextRoom = this.roomManager.getCurrentRoom();
+                        if (nextRoom) {
+                            this.enemyManager?.setSpawnBounds(
+                                nextRoom.x + 80,
+                                nextRoom.x + nextRoom.width - 80,
+                            );
+                            this.enemiesToSpawn = nextRoom.enemyCount;
+                            this.enemiesSpawnedThisRound = 0;
+                        }
+                        this.roundActive = true;
+                    });
+                } else {
+                    // All rooms cleared → advance to next round
+                    this.currentRound++;
+                    this.startNextRound();
+                }
             }
         }
     }
@@ -701,6 +745,16 @@ class GameScene extends Phaser.Scene {
             /* ignore */
         }
         try {
+            if (this.roomManager) this.roomManager.shutdown();
+        } catch {
+            /* ignore */
+        }
+        try {
+            if (this.platformManager) this.platformManager.clearAllPlatforms();
+        } catch {
+            /* ignore */
+        }
+        try {
             if (this.weaponManager && this.weaponManager.getWeaponsGroup) this.weaponManager.getWeaponsGroup().clear(true, true);
         } catch {
             /* ignore */
@@ -723,7 +777,7 @@ class GameScene extends Phaser.Scene {
         }
         try {
             if (this.particleManager && this.player?.sprite) {
-                this.particleManager.startPlayerAura(this.player.sprite);
+                this.particleManager.startPlayerAura(this.player.sprite, this.player.spineObject ?? null);
                 this.particleManager.setAuraHealth(this.gameUI?.health ?? 100, this.gameUI?.maxHealth ?? 100);
             }
         } catch {
@@ -745,6 +799,11 @@ class GameScene extends Phaser.Scene {
         }
         try {
             if (this.platformManager) this.platformManager.shutdown();
+        } catch {
+            /* ignore */
+        }
+        try {
+            if (this.roomManager) this.roomManager.shutdown();
         } catch {
             /* ignore */
         }

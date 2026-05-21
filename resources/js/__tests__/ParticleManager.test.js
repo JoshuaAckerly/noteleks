@@ -187,7 +187,7 @@ describe('ParticleManager', () => {
 
             pm.updatePlayerAura();
 
-            const expectedY = 500 - 80 * 0.7;
+            const expectedY = 500 - 96 * 0.6; // uses GameConfig.player.targetPixelHeight (96) as visual height
             // Full health (default 1.0) → high emitter, count = 3
             expect(pm._auraHighEmitter.explode).toHaveBeenCalledWith(3, 300, expectedY);
         });

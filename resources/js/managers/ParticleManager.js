@@ -1,3 +1,5 @@
+import GameConfig from '../config/GameConfig.js';
+
 /**
  * ParticleManager — centralises all particle effects for the Noteleks game.
  *
@@ -30,8 +32,9 @@ class ParticleManager {
         this._auraLowEmitter   = null; // low health    (0–33 %)
 
         // Aura state
-        this._auraSprite   = null;
-        this._auraActive   = false;
+        this._auraSprite      = null;
+        this._auraSpineObject = null;
+        this._auraActive      = false;
         this._auraLastEmit = 0;
         this._auraInterval = 45;  // ms between bursts
         this._auraHealth   = 1.0; // 0–1, set via setAuraHealth()
@@ -117,21 +120,21 @@ class ParticleManager {
             scale: { start: 0.75, end: 0 },
             tint:  0x00cc33,  // bright green
         });
-        this._auraHighEmitter.setDepth(99);
+        this._auraHighEmitter.setDepth(101);
 
         this._auraMidEmitter = this.scene.add.particles(0, 0, k, {
             ...auraBase,
             scale: { start: 0.48, end: 0 },
             tint:  0x007722,  // mid green
         });
-        this._auraMidEmitter.setDepth(99);
+        this._auraMidEmitter.setDepth(101);
 
         this._auraLowEmitter = this.scene.add.particles(0, 0, k, {
             ...auraBase,
             scale: { start: 0.25, end: 0 },
             tint:  0x003310,  // dark green
         });
-        this._auraLowEmitter.setDepth(99);
+        this._auraLowEmitter.setDepth(101);
     }
 
     // ─── Public API ───────────────────────────────────────────────────────────
@@ -185,19 +188,22 @@ class ParticleManager {
 
     /**
      * Start the continuous green aura around the player.
-     * @param {Phaser.GameObjects.Sprite} sprite  The player's physics sprite.
+     * @param {Phaser.GameObjects.Sprite} sprite       The player's physics sprite.
+     * @param {object|null}              [spineObject]  The player's SpineGameObject (optional).
      */
-    startPlayerAura(sprite) {
+    startPlayerAura(sprite, spineObject = null) {
         if (!sprite) return;
-        this._auraSprite   = sprite;
-        this._auraActive   = true;
-        this._auraLastEmit = 0;
+        this._auraSprite      = sprite;
+        this._auraSpineObject = spineObject ?? null;
+        this._auraActive      = true;
+        this._auraLastEmit    = 0;
     }
 
     /** Stop the green aura (e.g. on game over). */
     stopPlayerAura() {
-        this._auraActive = false;
-        this._auraSprite = null;
+        this._auraActive      = false;
+        this._auraSprite      = null;
+        this._auraSpineObject = null;
     }
 
     /**
@@ -227,8 +233,39 @@ class ParticleManager {
             count   = 1;
         }
 
-        const chestX = this._auraSprite.x;
-        const chestY = this._auraSprite.y - (this._auraSprite.displayHeight ?? 0) * 0.7;
+        let chestX = this._auraSprite.x;
+        let chestY;
+
+        // Primary: use the midpoint between the body and head bones.
+        // Bone names are full atlas paths (e.g. 'Skeleton/export/body').
+        // bone.worldY is in Spine local space (negative = above root in WebGL/yDown mode),
+        // so the screen conversion is: spine.y + bone.worldY * scaleY (NOT minus).
+        const spine = this._auraSpineObject;
+        if (spine) {
+            try {
+                const bodyBone = spine.skeleton?.findBone?.('Skeleton/export/body');
+                const headBone = spine.skeleton?.findBone?.('Skeleton/export/head');
+                if (bodyBone && headBone) {
+                    const sx = spine.scaleX ?? 1;
+                    const sy = spine.scaleY ?? 1;
+                    chestX = spine.x + (bodyBone.worldX * 0.25 + headBone.worldX * 0.75) * sx;
+                    chestY = spine.y + (bodyBone.worldY * 0.25 + headBone.worldY * 0.75) * sy;
+                } else if (bodyBone) {
+                    const sx = spine.scaleX ?? 1;
+                    const sy = spine.scaleY ?? 1;
+                    chestX = spine.x + bodyBone.worldX * sx;
+                    chestY = spine.y + bodyBone.worldY * sy;
+                }
+            } catch { /* ignore — fall through to offset fallback */ }
+        }
+
+        // Fallback: use the configured visual height (targetPixelHeight) so the
+        // chest lands on the actual character, not on the small physics collider.
+        if (chestY === undefined) {
+            const visualH = GameConfig?.player?.targetPixelHeight ?? (this._auraSprite.displayHeight ?? 30);
+            chestY = this._auraSprite.y - visualH * 0.6;
+        }
+
         emitter?.explode(count, chestX, chestY);
     }
 }

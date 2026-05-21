@@ -18,9 +18,12 @@ class PhysicsManager {
 
         sprite.body.setCollideWorldBounds(true);
         sprite.body.setBounce(0);
-        // Set physics body to match skeleton body
-        sprite.body.setSize(60, 100); // Character-sized collision
-        sprite.body.setOffset(48, 120); // Center on skeleton body
+        // Physics sprite is scale 1 on a 64×96 source texture with origin (0.5, 1).
+        // Spine skeleton is 502.5 spine units tall × scale 0.3 = ~150.75px visual height.
+        // Body height 155 with offset.y=-59 keeps body.bottom at sprite.y (feet)
+        // and body.top at sprite.y-155 (≈ top of head).
+        sprite.body.setSize(40, 155, false);
+        sprite.body.setOffset(12, -59);
     }
 
     /**
