@@ -111,11 +111,12 @@ class Player extends GameObject {
             spineObject.setDepth(100);
             spineObject.setScale(GameConfig.player.scale, GameConfig.player.scale);
 
-            // Hide slots that float incorrectly during movement
-            ['hand_wall', 'cape'].forEach((slotName) => {
-                const slot = spineObject.skeleton?.findSlot(slotName);
-                if (slot) slot.color.a = 0;
+            // Find and store slots to hide (match by name suffix, handles full path names)
+            this._hiddenSlots = (spineObject.skeleton?.slots ?? []).filter((slot) => {
+                const n = slot.data?.name ?? '';
+                return n === 'cape' || n.endsWith('/cape') || n === 'hand_wall' || n.endsWith('/hand_wall');
             });
+            this._hideSlots();
 
             return spineObject;
         } catch (e) {
@@ -125,8 +126,17 @@ class Player extends GameObject {
         }
     }
 
+    _hideSlots() {
+        if (!this._hiddenSlots) return;
+        for (const slot of this._hiddenSlots) {
+            slot.attachment = null;
+            slot.color.a = 0;
+        }
+    }
+
     syncVisualToPhysics() {
         if (!this.spineObject || !this.sprite) return;
+        this._hideSlots();
 
         const offset = GameConfig.player.spineOffset || { x: 0, y: 0 };
         const scale = GameConfig.player.scale;
