@@ -24,13 +24,14 @@ class NoteleksGame {
             const deviceMemory = navigator && navigator.deviceMemory ? Number(navigator.deviceMemory) : null;
             const cores = navigator && navigator.hardwareConcurrency ? Number(navigator.hardwareConcurrency) : null;
             const ua = (navigator && navigator.userAgent) || '';
-            // Heuristics: memory < 2GB or 1-2 cores => lowQuality
+            // Heuristics: memory < 2GB or 1-2 cores => lowQuality.
+            // Screen width is NOT used — modern smartphones have narrow CSS pixels
+            // but are fully capable of running Spine animations.
             const lowMem = deviceMemory !== null ? deviceMemory < 2 : false;
             const lowCores = cores !== null ? cores <= 2 : false;
-            const smallScreenUA = /iPhone|Android/i.test(ua) && window.innerWidth <= 420;
             this._detectedDeviceInfo = { deviceMemory, cores, ua };
             // Expose a global flag for debug/QA toggles
-            window.noteleks_lowQuality = lowMem || lowCores || smallScreenUA ? true : false;
+            window.noteleks_lowQuality = lowMem || lowCores ? true : false;
             GameConfig.lowQuality = !!window.noteleks_lowQuality;
         } catch {
             // ignore detection errors
