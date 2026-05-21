@@ -2,7 +2,7 @@ import GameConfig from '../config/GameConfig.js';
 
 const SPINE_ANIMATION_MAP = {
     'player-idle': 'idle',
-    'player-run': 'idle', // TODO: replace with 'run' once a run animation is added to the skeleton
+    'player-run': 'run',
     'player-jump': 'jump',
     'player-attack': 'throw',
 };
