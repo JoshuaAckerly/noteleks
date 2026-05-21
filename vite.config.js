@@ -25,15 +25,18 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    resolve: {
+        alias: {
+            // Phaser is loaded from CDN as a classic script (window.Phaser).
+            // spine-phaser does `import * as Phaser from 'phaser'` which fails
+            // in browsers without an import-map. This shim re-exports all
+            // Phaser namespaces from the already-loaded window.Phaser global
+            // so the dynamic spine chunk resolves correctly at runtime.
+            phaser: path.resolve(__dirname, 'resources/js/phaser-shim.js'),
+        },
+    },
     build: {
         chunkSizeWarningLimit: 1000,
-        rollupOptions: {
-            // Phaser is loaded from CDN in the blade template; keep it external
-            external: ['phaser'],
-            output: {
-                globals: { phaser: 'Phaser' },
-            },
-        },
     },
 });
 

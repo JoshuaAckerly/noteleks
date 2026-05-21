@@ -127,6 +127,16 @@ class GameScene extends Phaser.Scene {
                     if (!p || !p.sprite) return false;
                     if (GameConfig.useSpine && p.spineObject) return true;
 
+                    // Spine failed or is disabled — the physics sprite is already the visual.
+                    // Do NOT create a static non-moving fallback sprite; just ensure the
+                    // physics sprite is visible and let physics drive it normally.
+                    if (!p.spineObject) {
+                        if (p.sprite && typeof p.sprite.setVisible === 'function') {
+                            p.sprite.setVisible(true);
+                        }
+                        return true;
+                    }
+
                     // Avoid recreating
                     if (p._persistentFallbackSprite && p._persistentFallbackSprite.scene) return true;
 
