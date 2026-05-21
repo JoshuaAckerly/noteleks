@@ -8,7 +8,7 @@ Route::get('/', function () {
 })->name('game');
 
 // Serve Spine character assets with correct MIME type and caching headers
-Route::get('/spine/characters/{file}', function ($file) {
+Route::get('/spine/characters/{file}', function (string $file) {
     $path = public_path("spine/characters/{$file}");
 
     if (! file_exists($path)) {
