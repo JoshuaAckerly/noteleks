@@ -13,7 +13,7 @@ export const GameConfig = {
     // Full scrolling world dimensions
     world: {
         width: 3200,
-        height: 600,
+        height: 800,
     },
 
     // Use Spine runtime when the plugin is available, with frame animations as fallback.
@@ -27,7 +27,7 @@ export const GameConfig = {
 
     // Player settings
     player: {
-        startPosition: { x: 200, y: 400 },
+        startPosition: { x: 200, y: 720 }, // near ground (worldH - 80)
         speed: 220,            // Was 160 — more responsive on an 800px canvas
         jumpPower: 520,        // Tuned to match old apex height with new gravity (500)
         doubleJumpEnabled: true,

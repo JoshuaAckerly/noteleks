@@ -65,9 +65,12 @@ export class PlatformManager {
             this.platforms.add(tile);
         }
 
-        // Floating platforms — raised so lowest tier bottom (tierY+16) clears the 151px character
-        const tierY = [worldH - 250, worldH - 340, worldH - 430];
-        const floatCount = 2 + Math.floor(Math.random() * 3); // 2–4
+        // 3 floating tiers with 170 px centre-to-centre spacing.
+        // Clear gap between adjacent tiers = 170 - 32 = 138 px  (player body = 100 px, 38 px headroom).
+        // Tier 0 sits ~220 px above ground so the player can walk comfortably underneath.
+        const tierY = [worldH - 220, worldH - 390, worldH - 560];
+        // Scale platform count to room width: ~1 platform per 400 px plus 0–2 random extras
+        const floatCount = 2 + Math.floor(roomW / 400) + Math.floor(Math.random() * 3);
         const placed = [];
 
         for (let j = 0; j < floatCount; j++) {
@@ -139,13 +142,13 @@ export class PlatformManager {
         }
 
         // ── Floating platforms ────────────────────────────────────────────────
-        // Tier heights (y): low=350 mid=260 high=170 — clearance above 151px character
-        const tierY = [350, 260, 170];
+        // Tiers match _buildRoom: 170 px spacing, 138 px clear gap (100 px player body + 38 px headroom)
+        const tierY = [worldH - 220, worldH - 390, worldH - 560];
 
         // Bridge platforms: one per pit to ensure it's crossable
         for (const [pitStart, pitEnd] of pitZones) {
             const bridgeX = (pitStart + pitEnd) / 2;
-            this.createFloatingPlatform(bridgeX, 260, 192, tileH);
+            this.createFloatingPlatform(bridgeX, worldH - 390, 192, tileH);
         }
 
         // Scatter platforms across zones (avoid first/last 200 px)

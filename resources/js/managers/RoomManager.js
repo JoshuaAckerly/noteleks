@@ -1,12 +1,13 @@
 import GameConfig from '../config/GameConfig.js';
 
-const ROOM_WIDTH = 800; // matches screen width
+const ROOM_WIDTH = 3200; // 4× the 800px viewport — wide room the camera scrolls through
 const FADE_DURATION = 500;
 
 /**
  * Manages room-based level progression.
  *
- * The world is divided into screen-sized rooms (800 × 600). Each room has its
+ * The world is divided into rooms (3200 × 800) — wider and taller than the 800×600
+ * viewport so the camera scrolls in both directions as the player explores. Each room has its
  * own procedurally generated platform layout and enemy quota. Clearing all
  * enemies in a room triggers a camera-fade transition to the next room. When
  * the last room is cleared the round ends.
