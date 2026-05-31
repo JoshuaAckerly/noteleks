@@ -10,12 +10,13 @@ class AddSecurityHeaders
 {
     public function handle(Request $request, Closure $next): Response
     {
+        /** @var Response $response */
         $response = $next($request);
 
         $isDev = app()->environment('local', 'testing');
 
         // Content Security Policy
-        $csp = implode('; ', array_filter([
+        $csp = implode('; ', [
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com".($isDev ? ' http://localhost:* http://[::1]:*' : ''),
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
@@ -27,7 +28,7 @@ class AddSecurityHeaders
             "base-uri 'self'",
             "form-action 'self'",
             'upgrade-insecure-requests',
-        ]));
+        ]);
 
         $response->headers->set('Content-Security-Policy', $csp);
         $response->headers->set('X-Frame-Options', 'DENY');
