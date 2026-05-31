@@ -17,16 +17,16 @@ class AddSecurityHeaders
         // Content Security Policy
         $csp = implode('; ', array_filter([
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com" . ($isDev ? " http://localhost:* http://[::1]:*" : ''),
+            "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com".($isDev ? ' http://localhost:* http://[::1]:*' : ''),
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
             "font-src 'self' https://fonts.bunny.net",
             "img-src 'self' data: https: blob:",
-            "connect-src 'self' https://graveyardjokes.com https://www.graveyardjokes.com https://www.google-analytics.com https://region1.google-analytics.com" . ($isDev ? " http://localhost:* ws://localhost:* http://[::1]:* ws://[::1]:*" : ''),
+            "connect-src 'self' https://graveyardjokes.com https://www.graveyardjokes.com https://www.google-analytics.com https://region1.google-analytics.com".($isDev ? ' http://localhost:* ws://localhost:* http://[::1]:* ws://[::1]:*' : ''),
             "frame-ancestors 'none'",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            "upgrade-insecure-requests",
+            'upgrade-insecure-requests',
         ]));
 
         $response->headers->set('Content-Security-Policy', $csp);
