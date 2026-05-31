@@ -30,7 +30,7 @@ describe('handleGameplayUpdate – player pit-death', () => {
     }
 
     it('calls gameOver() when player falls below worldH + 50', () => {
-        const scene = makeScene(700); // worldH=600, threshold=650
+        const scene = makeScene(900); // worldH=800 (GameConfig), threshold=850
         scene.handleGameplayUpdate();
         expect(scene.gameOver).toHaveBeenCalled();
     });
@@ -42,7 +42,7 @@ describe('handleGameplayUpdate – player pit-death', () => {
     });
 
     it('does NOT call gameOver() when player y is exactly at worldH + 50', () => {
-        const scene = makeScene(650); // not strictly greater than threshold
+        const scene = makeScene(850); // not strictly greater than threshold
         scene.handleGameplayUpdate();
         expect(scene.gameOver).not.toHaveBeenCalled();
     });
@@ -65,7 +65,7 @@ describe('handleGameplayUpdate – enemy pit-death', () => {
             removeEnemy: jest.fn(),
             enemies: {
                 children: {
-                    entries: [{ y: 700, enemyRef: mockEnemy }],
+                    entries: [{ y: 900, enemyRef: mockEnemy }],
                 },
             },
             update: jest.fn(),
@@ -177,7 +177,7 @@ describe('setupCamera', () => {
 
         scene.setupCamera();
 
-        expect(mockSetBounds).toHaveBeenCalledWith(0, 0, 3200, 600);
+        expect(mockSetBounds).toHaveBeenCalledWith(0, 0, 3200, 800);
     });
 
     it('does nothing when player has no sprite', () => {
