@@ -12,12 +12,12 @@ describe('GameConfig', () => {
 
     it('should have correct world dimensions', () => {
         expect(GameConfig.world.width).toBe(3200);
-        expect(GameConfig.world.height).toBe(600);
+        expect(GameConfig.world.height).toBe(800);
     });
 
     it('should have correct player start position', () => {
         expect(GameConfig.player.startPosition.x).toBe(200);
-        expect(GameConfig.player.startPosition.y).toBe(400);
+        expect(GameConfig.player.startPosition.y).toBe(720);
     });
 
     it('should have snappy physics gravity', () => {
