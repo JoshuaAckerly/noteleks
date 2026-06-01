@@ -11,7 +11,7 @@
         "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config jest.config.cjs --watch"
     },
     "dependencies": {
-        "@esotericsoftware/spine-phaser": "^4.1.55",
+        "@esotericsoftware/spine-phaser": "^4.1.56",
         "phaser": "^3.90.0"
     },
     "devDependencies": {
