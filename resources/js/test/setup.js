@@ -1,2 +1,2 @@
-import { jest } from '@jest/globals';
-globalThis.jest = jest;
+import { vi } from 'vitest';
+globalThis.jest = vi;
