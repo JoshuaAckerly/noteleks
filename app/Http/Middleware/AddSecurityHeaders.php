@@ -18,7 +18,7 @@ class AddSecurityHeaders
         // Content Security Policy
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com".($isDev ? ' http://localhost:* http://[::1]:*' : ''),
+            "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net".($isDev ? ' http://localhost:* http://[::1]:*' : ''),
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
             "font-src 'self' https://fonts.bunny.net",
             "img-src 'self' data: https: blob:",
