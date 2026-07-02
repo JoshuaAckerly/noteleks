@@ -101,7 +101,7 @@ jobs:
       - name: Install NPM dependencies
         run: npm ci
 
-      - name: Run Jest tests
+      - name: Run Vitest tests
         run: npm test
 
       - name: NPM audit
