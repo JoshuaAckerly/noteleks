@@ -12,7 +12,7 @@
     },
     "dependencies": {
         "@esotericsoftware/spine-phaser": "^4.1.56",
-        "phaser": "^3.90.0"
+        "phaser": "^4.2.0"
     },
     "devDependencies": {
         "laravel-vite-plugin": "^3.0.0",
