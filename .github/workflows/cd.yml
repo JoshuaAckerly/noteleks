@@ -25,3 +25,12 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             bash deploy-production.sh
+
+      - name: Post-deploy health check
+        run: |
+          echo "Waiting for site to come up..."
+          sleep 20
+          curl -sSf --max-time 15 --retry 3 --retry-delay 10 \
+            https://noteleks.graveyardjokes.com/ -o /dev/null \
+            && echo "✅ Site is up" \
+            || (echo "❌ Health check failed" && exit 1)
