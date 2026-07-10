@@ -7,6 +7,11 @@ Route::get('/', function () {
     return view('game');
 })->name('game');
 
+// Legal pages
+Route::get('/privacy', fn () => view('legal.privacy'))->name('privacy');
+Route::get('/terms', fn () => view('legal.terms'))->name('terms');
+Route::get('/cookies', fn () => view('legal.cookies'))->name('cookies');
+
 // Serve Spine character assets with correct MIME type and caching headers
 Route::get('/spine/characters/{file}', function (string $file) {
     $path = public_path("spine/characters/{$file}");
