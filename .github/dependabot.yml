@@ -9,6 +9,10 @@ updates:
     labels:
       - "dependencies"
       - "javascript"
+    ignore:
+      # spine-phaser only supports phaser ^3.60.0; block major upgrades
+      - dependency-name: "phaser"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "composer"
     directory: "/"
