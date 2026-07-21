@@ -1,0 +1,24 @@
+name: Production Uptime Check
+
+on:
+  schedule:
+    - cron: '0 8 * * *'   # Daily at 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  uptime:
+    name: Check Production Site
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Check production site
+        run: |
+          status=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 "https://noteleks.graveyardjokes.com" || echo "000")
+          if [[ "$status" =~ ^(200|301|302)$ ]]; then
+            echo "✅ https://noteleks.graveyardjokes.com → $status"
+          else
+            echo "❌ https://noteleks.graveyardjokes.com → $status"
+            exit 1
+          fi
