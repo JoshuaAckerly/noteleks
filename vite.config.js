@@ -11,7 +11,11 @@ export default defineConfig({
             host: 'noteleks.graveyardjokes.local',
         },
         cors: {
-            origin: ['http://noteleks.graveyardjokes.local'],
+            origin: [
+                'http://noteleks.graveyardjokes.local',
+                'http://noteleks.graveyardjokes.local:8009',
+                'http://localhost:8009',
+            ],
             credentials: true,
         },
         allowedHosts: ['noteleks.graveyardjokes.local'],

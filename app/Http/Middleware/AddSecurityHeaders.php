@@ -18,16 +18,16 @@ class AddSecurityHeaders
         // Content Security Policy
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net".($isDev ? ' http://localhost:* http://[::1]:*' : ''),
+            "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net".($isDev ? ' http://localhost:* http://*.graveyardjokes.local:*' : ''),
             "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
             "font-src 'self' https://fonts.bunny.net",
             "img-src 'self' data: https: blob:",
-            "connect-src 'self' https://graveyardjokes.com https://www.graveyardjokes.com https://www.google-analytics.com https://region1.google-analytics.com".($isDev ? ' http://localhost:* ws://localhost:* http://[::1]:* ws://[::1]:*' : ''),
+            "connect-src 'self' https://graveyardjokes.com https://www.graveyardjokes.com https://www.google-analytics.com https://region1.google-analytics.com".($isDev ? ' http://localhost:* ws://localhost:* http://*.graveyardjokes.local:* ws://*.graveyardjokes.local:*' : ''),
             "frame-ancestors 'none'",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            'upgrade-insecure-requests',
+            ...($isDev ? [] : ['upgrade-insecure-requests']),
         ]);
 
         $response->headers->set('Content-Security-Policy', $csp);
@@ -36,11 +36,11 @@ class AddSecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()');
         $response->headers->set('X-Permitted-Cross-Domain-Policies', 'none');
-        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
         $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
         $response->headers->remove('X-Powered-By');
 
         if (! $isDev) {
+            $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
         }
 

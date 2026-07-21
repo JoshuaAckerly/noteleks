@@ -67,7 +67,7 @@
 
                 let trackingUrl = '/api/track-visit';
                 if (isLocalSubdomain) {
-                    trackingUrl = 'http://graveyardjokes.local/api/track-visit';
+                    trackingUrl = 'http://graveyardjokes.local:8000/api/track-visit';
                 } else if (isTestSubdomain) {
                     trackingUrl = 'http://graveyardjokes.test/api/track-visit';
                 } else if (!isMainLocal && !isMainTest && !isMainProd) {
