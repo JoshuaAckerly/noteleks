@@ -4,11 +4,13 @@ const createPhaserMock = () => ({
     AUTO: 0,
     Scale: { FIT: 1, CENTER_BOTH: 2 },
     Scene: class {},
-    Game: jest.fn().mockImplementation(() => ({
-        events: { once: jest.fn() },
-        scene: { getScene: jest.fn().mockReturnValue({ gameState: 'playing', pauseGame: jest.fn(), resumeGame: jest.fn() }) },
-        destroy: jest.fn(),
-    })),
+    Game: jest.fn().mockImplementation(function () {
+        return {
+            events: { once: jest.fn() },
+            scene: { getScene: jest.fn().mockReturnValue({ gameState: 'playing', pauseGame: jest.fn(), resumeGame: jest.fn() }) },
+            destroy: jest.fn(),
+        };
+    }),
 });
 
 describe('NoteleksGame', () => {
