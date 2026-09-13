@@ -59,15 +59,15 @@
                 console.log('🎮 Tracking game visit:', visitData);
 
                 const host = window.location.hostname;
-                const isMainLocal = host === 'localhost' || host === '127.0.0.1' || host === 'graveyardjokes.local';
+                const isMainLocal = host === 'localhost' || host === '127.0.0.1' || host === 'graveyardjokes.test';
                 const isMainTest = host === 'graveyardjokes.test';
                 const isMainProd = host === 'graveyardjokes.com' || host === 'www.graveyardjokes.com';
-                const isLocalSubdomain = host.endsWith('.graveyardjokes.local');
+                const isLocalSubdomain = host.endsWith('.graveyardjokes.test');
                 const isTestSubdomain = host.endsWith('.graveyardjokes.test');
 
                 let trackingUrl = '/api/track-visit';
                 if (isLocalSubdomain) {
-                    trackingUrl = 'http://graveyardjokes.local:8000/api/track-visit';
+                    trackingUrl = 'http://graveyardjokes.test:8000/api/track-visit';
                 } else if (isTestSubdomain) {
                     trackingUrl = 'http://graveyardjokes.test/api/track-visit';
                 } else if (!isMainLocal && !isMainTest && !isMainProd) {

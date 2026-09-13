@@ -6,19 +6,20 @@ export default defineConfig({
     server: {
         port: 8008,
         host: '0.0.0.0',
-        origin: 'http://noteleks.graveyardjokes.local:8008',
+        origin: 'http://10.0.1.20:8008',
         hmr: {
-            host: 'noteleks.graveyardjokes.local',
+            host: '10.0.1.20',
         },
         cors: {
             origin: [
-                'http://noteleks.graveyardjokes.local',
-                'http://noteleks.graveyardjokes.local:8009',
+                'http://noteleks.graveyardjokes.test',
+                'http://noteleks.graveyardjokes.test:8009',
                 'http://localhost:8009',
+                'http://10.0.1.20:8009',
             ],
             credentials: true,
         },
-        allowedHosts: ['noteleks.graveyardjokes.local'],
+        allowedHosts: ['noteleks.graveyardjokes.test', '10.0.1.20'],
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
